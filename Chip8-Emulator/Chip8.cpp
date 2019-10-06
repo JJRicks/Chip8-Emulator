@@ -96,6 +96,11 @@ void Chip8::emulateCycle() {
 			break;
 		}
 		break;
+	case 0x6000:
+		V[(opcode & 0x0F00 >> 8)] = (opcode & 0x00FF);
+		pc += 2;
+		break;
+	default:
 		printf("Unknown opcode: 0x%X\n", opcode);
 	}
 	if (delay_timer > 0) {
