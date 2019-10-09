@@ -1,3 +1,6 @@
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include "Chip8.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,19 +67,37 @@ void Chip8::emulateCycle() {
 		++sp;
 		pc = opcode & 0x0FFF;
 		break;
-	case 0x0004:
-		if(V[(opcode & 0x00F0 >> 4)] > (0xFF - V[(opcode & 0x0F00) >> 8])) {
-			V[0xF] = 1;
+	case 0x8000:
+		switch (opcode & 0x000F) {
+		case 0x0004:
+			if (V[(opcode & 0x00F0 >> 4)] > (0xFF - V[(opcode & 0x0F00) >> 8])) {
+				V[0xF] = 1;
+			}
+			else {
+				V[0xF] = 0;
+			}
+			V[(opcode & 0x0F00) >> 8] += V[(opcode & 0x00F0) >> 4];
+			break;
+		default:
+			printf("Unknown 0x8000 opcode: 0x%X\n", opcode);
+			break;
 		}
-		else {
-			V[0xF] = 0;
+	break;
+	case 0xF000:
+		switch (opcode & 0x00FF) {
+		case 0x0033:
+			memory[I] = V[(opcode & 0x0F00) >> 8] / 100;
+			memory[I + 1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10;
+			memory[I + 2] = (V[(opcode & 0x0F00) >> 8] % 100) % 10;
+			pc += 2;
+			break;
+		default:
+			printf("Unknown 0xF000 opcode: 0x%X\n", opcode);
+			break;
 		}
-		V[(opcode & 0x0F00) >> 8] += V[(opcode & 0x00F0) >> 4];
 		break;
-	case 0x0033:
-		memory[I] = V[(opcode & 0x0F00) >> 8] / 100;
-		memory[I + 1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10;
-		memory[I + 2] = (V[(opcode & 0x0F00) >> 8] % 100) % 10;
+	case 0x6000:
+		V[(opcode & 0x0F00 >> 8)] = (opcode & 0x00FF);
 		pc += 2;
 		break;
 	default:
